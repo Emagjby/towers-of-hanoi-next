@@ -1,17 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useHanoi } from "@/hooks/useHanoi";
 import { Visualizer } from "@/components/hanoi/Visualizer";
 import { Backdrop } from "@/components/hanoi/Backdrop";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Controls } from "@/components/hanoi/Controls";
+import { MobileControls } from "@/components/hanoi/MobileControls";
 
 export default function Home() {
   const {
@@ -34,6 +29,15 @@ export default function Home() {
     total,
     currentSnapshot,
   } = state;
+  const [isCompact, setIsCompact] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsCompact(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const maxDisk = useMemo(() => {
     if (!currentSnapshot) return diskCount;
@@ -48,89 +52,29 @@ export default function Home() {
       <Backdrop />
       {/* Header toolbar */}
       <div className="w-full max-w-3xl mx-auto pt-10 pb-8 px-4">
-        <div className="flex flex-wrap gap-8 items-center justify-center glass-input py-4 px-3 sm:px-6 rounded-2xl shadow-xl">
-          <div>
-            <label className="block mb-3 text-xs font-medium opacity-70">
-              Disks
-            </label>
-            <div className="w-36">
-              <Slider
-                value={[diskCount]}
-                min={1}
-                max={10}
-                step={1}
-                onValueChange={(v) => setDiskCount(v[0] ?? diskCount)}
-                aria-label="Disks"
-              />
-            </div>
-            <div className="text-xs text-center mt-2 opacity-60">
-              {diskCount}
-            </div>
-          </div>
-          <div>
-            <label className="block mb-1 text-xs font-medium opacity-70">
-              From
-            </label>
-            <Select
-              value={String(from)}
-              onValueChange={(v) => setFrom(Number(v))}
-            >
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1" className="cursor-pointer">
-                  1 (A)
-                </SelectItem>
-                <SelectItem value="2" className="cursor-pointer">
-                  2 (B)
-                </SelectItem>
-                <SelectItem value="3" className="cursor-pointer">
-                  3 (C)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block mb-1 text-xs font-medium opacity-70">
-              To
-            </label>
-            <Select value={String(to)} onValueChange={(v) => setTo(Number(v))}>
-              <SelectTrigger className="w-24 cursor-pointer">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1" className="cursor-pointer">
-                  1 (A)
-                </SelectItem>
-                <SelectItem value="2" className="cursor-pointer">
-                  2 (B)
-                </SelectItem>
-                <SelectItem value="3" className="cursor-pointer">
-                  3 (C)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="mt-2 sm:mt-0">
-            <label className="block mb-3 text-xs font-medium opacity-70">
-              Speed
-            </label>
-            <div className="w-36">
-              <Slider
-                value={[1500 - (speedMs - 100)]} // invert the value
-                min={100}
-                max={1500}
-                step={50}
-                onValueChange={(v) => setSpeedMs(1500 - (v[0] - 100))}
-                aria-label="Speed"
-              />
-            </div>
-            <div className="text-xs text-center mt-2 opacity-60">
-              {(1000 / speedMs).toFixed(1)}x
-            </div>
-          </div>
-        </div>
+        {!isCompact ? (
+          <Controls
+            diskCount={diskCount}
+            setDiskCount={setDiskCount}
+            from={from}
+            setFrom={setFrom}
+            to={to}
+            setTo={setTo}
+            speedMs={speedMs}
+            setSpeedMs={setSpeedMs}
+          />
+        ) : (
+          <MobileControls
+            diskCount={diskCount}
+            setDiskCount={setDiskCount}
+            from={from}
+            setFrom={setFrom}
+            to={to}
+            setTo={setTo}
+            speedMs={speedMs}
+            setSpeedMs={setSpeedMs}
+          />
+        )}
       </div>
 
       {/* Visualizer glass panel */}
@@ -159,14 +103,18 @@ export default function Home() {
           </div>
         </div>
         {/* Play controls - larger */}
-        <div className="flex justify-center gap-5 mt-4 items-center">
+        <div className="flex justify-center gap-5 max-sm:gap-2.5 mt-4 items-center">
           <button
-            className="cursor-pointer rounded-full p-5 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
+            className="cursor-pointer rounded-full max-sm:p-2.5 p-5 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
             onClick={actions.prev}
             disabled={current === 0}
             aria-label="Prev"
           >
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <svg
+              className="w-[34px] h-[34px] max-sm:w-[26px] max-sm:h-[26px]"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
               <path
                 d="M15 6L9 12L15 18"
                 stroke="currentColor"
@@ -177,28 +125,40 @@ export default function Home() {
             </svg>
           </button>
           <button
-            className="cursor-pointer rounded-full p-6 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
+            className="cursor-pointer rounded-full max-sm:p-3 p-6 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
             onClick={actions.playPause}
             disabled={!snapshots.length}
             aria-label={isPlaying ? "Pause" : "Play"}
           >
             {isPlaying ? (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <svg
+                className="w-[42px] h-[42px] max-sm:w-[34px] max-sm:h-[34px]"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
                 <path d="M10 6H8v12h2V6Zm6 0h-2v12h2V6Z" fill="currentColor" />
               </svg>
             ) : (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <svg
+                className="w-[42px] h-[42px] max-sm:w-[34px] max-sm:h-[34px]"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
                 <path d="M8 5v14l11-7L8 5Z" fill="currentColor" />
               </svg>
             )}
           </button>
           <button
-            className="cursor-pointer rounded-full p-5 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
+            className="cursor-pointer rounded-full max-sm:p-2.5 p-5 border border-white/20 text-xl hover:bg-white/10 transition disabled:opacity-50"
             onClick={actions.next}
             disabled={current >= total - 1}
             aria-label="Next"
           >
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <svg
+              className="w-[34px] h-[34px] max-sm:w-[26px] max-sm:h-[26px]"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
               <path
                 d="M9 6l6 6-6 6"
                 stroke="currentColor"
@@ -209,7 +169,7 @@ export default function Home() {
             </svg>
           </button>
           <button
-            className="cursor-pointer rounded-full p-5 border border-white/20 ml-7 text-xl hover:bg-white/10 transition disabled:opacity-50"
+            className="cursor-pointer rounded-full max-sm:p-2.5 p-5 border border-white/20 ml-7 text-xl hover:bg-white/10 transition disabled:opacity-50"
             onClick={actions.reset}
             disabled={!snapshots.length}
             aria-label="Reset"
@@ -217,7 +177,7 @@ export default function Home() {
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 640 640"
-              className="w-[34px] h-[34px]"
+              className="w-[34px] h-[34px] max-sm:w-[26px] max-sm:h-[26px]"
               aria-hidden="true"
             >
               <path

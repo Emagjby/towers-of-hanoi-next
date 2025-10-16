@@ -30,10 +30,16 @@ export default function Home() {
     currentSnapshot,
   } = state;
   const [isCompact, setIsCompact] = useState(false);
+  const [compactness, setCompactness] = useState(0);
 
   useEffect(() => {
     const handleResize = () => {
       setIsCompact(window.innerWidth < 768);
+      window.innerWidth < 450
+        ? setCompactness(10)
+        : window.innerWidth < 768
+          ? setCompactness(5)
+          : setCompactness(0);
     };
 
     handleResize();
@@ -83,7 +89,11 @@ export default function Home() {
       {/* Visualizer glass panel */}
       <div className="w-full max-w-5xl mx-auto px-4">
         <div className="rounded-3xl border border-white/15 bg-white/5 backdrop-blur-xl px-2 sm:px-10 py-5 sm:py-8 mb-2 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <Visualizer snapshot={currentSnapshot} maxDisk={maxDisk} />
+          <Visualizer
+            snapshot={currentSnapshot}
+            maxDisk={maxDisk}
+            compactness={compactness}
+          />
         </div>
         {/* Step slider */}
         <div className="pt-6 pb-0 px-1 sm:px-4 flex flex-col gap-3 items-center">

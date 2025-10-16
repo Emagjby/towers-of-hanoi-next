@@ -35,6 +35,9 @@ export default function Home() {
     const handleResize = () => {
       setIsCompact(window.innerWidth < 768);
     };
+
+    handleResize();
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
